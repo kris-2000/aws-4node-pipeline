@@ -44,3 +44,8 @@ The scripted pipeline consists of 5 automated stages executed upon code commit:
     ├── screenshot6_sonarqube_dashboard.png
     ├── screenshot7_nexus_artifact.png
     └── screenshot8_tomcat_live_app.png
+
+## 👤 Author
+
+**KRISHNA PRASAD S**
+* **GitHub:** [@kris-2000](https://github.com/kris-2000)
