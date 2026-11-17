@@ -1,0 +1,41 @@
+node {
+    stage('clone repo') {
+        git credentialsId: 'GIT-Credentials', url: 'https://github.com/suffixscope/maven-web-app.git'
+    }
+    
+    stage('Maven Build') {
+        def mavenHome = tool name: "Maven-3.9.4", type: "maven"
+        def mavenCMD = "${mavenHome}/bin/mvn"
+        sh "${mavenCMD} clean package"
+    }
+    
+    stage('SonarQube analysis') {
+        withSonarQubeEnv('Sonar-Server-7.8') {
+            def mavenHome = tool name: "Maven-3.9.4", type: "maven"
+            def mavenCMD = "${mavenHome}/bin/mvn"
+            sh "${mavenCMD} sonar:sonar"
+        }
+    }
+    
+    stage('Nexus Upload') {
+        nexusArtifactUploader artifacts: [[
+            artifactId: '01-Maven-Web-App',
+            classifier: '',
+            file: 'target/01-maven-web-app.war',
+            type: 'war'
+        ]],
+        credentialsId: 'Nexus-Credentials',
+        groupId: 'org.scopeindia',
+        nexusUrl: '<NEXUS_PUBLIC_IP>:8081',
+        nexusVersion: 'nexus3',
+        protocol: 'http',
+        repository: 'scopeindia-snapshot-repository',
+        version: '1.0-SNAPSHOT'
+    }
+    
+    stage('Deploy') {
+        sshagent(['Tomcat-Server-Agent']) {
+            sh 'scp -o StrictHostKeyChecking=no target/01-maven-web-app.war ec2-user@<TOMCAT_PUBLIC_IP>:/home/ec2-user/apache-tomcat-9.0.80/webapps'
+        }
+    }
+}
